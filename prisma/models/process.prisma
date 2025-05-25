@@ -1,0 +1,23 @@
+model Process {
+  id              String    @id @default(uuid())
+  name            String    // 工序名称
+  code            String    @unique  // 工序编号
+  shortName       String    // 工序简称
+  multiplier      Float     @default(1.0)  // 倍数
+  basePrice       Float     // 原工价
+  finalPrice      Float     // 最终工价（考虑倍数后）
+  requirements    String?   // 工序要求
+  qualityNotes    String?   // 质量说明
+  description     String?   // 描述
+  standardTime    Float?    // 标准工时
+  status          String    // active, inactive
+  remark          String?   // 备注
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 关联
+  styleProcesses  ProductProcessAssignment[]
+  employees       EmployeeProcess[]
+
+  @@map("processes")
+} 

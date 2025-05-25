@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,35 +10,170 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 租户模型
-model Tenant {
-  id        String   @id @default(uuid())
-  name      String
-  domain    String?  @unique
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("tenants")
-}
-
-// 用户模型
+// User Management
 model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @relation(fields: [roleId], references: [id])
+  roleId        String
+  company       Company   @relation(fields: [companyId], references: [id])
+  companyId     String
+  department    Department? @relation(fields: [departmentId], references: [id])
+  departmentId  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isActive      Boolean   @default(true)
+}
+
+model Role {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  permissions Permission[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model Permission {
   id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  password  String
-  role      Role     @default(USER)
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  name      String   @unique
+  roles     Role[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@map("users")
 }
 
-// 角色枚举
-enum Role {
-  ADMIN
-  USER
+// Organization Structure
+model Company {
+  id          String       @id @default(uuid())
+  name        String
+  code        String       @unique
+  address     String?
+  phone       String?
+  departments Department[]
+  employees   Employee[]
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
+
+model Department {
+  id        String    @id @default(uuid())
+  name      String
+  code      String    @unique
+  company   Company   @relation(fields: [companyId], references: [id])
+  companyId String
+  employees Employee[]
+  users     User[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Employee {
+  id           String     @id @default(uuid())
+  name         String
+  code         String     @unique
+  company      Company    @relation(fields: [companyId], references: [id])
+  companyId    String
+  department   Department @relation(fields: [departmentId], references: [id])
+  departmentId String
+  position     String?
+  phone        String?
+  email        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// Business Models
+model Process {
+  id              String            @id @default(uuid())
+  name            String
+  description     String?
+  standardTime    Float?
+  products        Product[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model Product {
+  id               String            @id @default(uuid())
+  name             String
+  code             String            @unique
+  description      String?
+  brand            Brand             @relation(fields: [brandId], references: [id])
+  brandId          String
+  processes        Process[]
+  variants         ProductVariant[]  // 产品变体（颜色和尺码组合）
+  productionOrders ProductionOrder[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+// 产品变体（具体的颜色和尺码组合）
+model ProductVariant {
+  id          String   @id @default(uuid())
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  color       Color    @relation(fields: [colorId], references: [id])
+  colorId     String
+  size        Size     @relation(fields: [sizeId], references: [id])
+  sizeId      String
+  sku         String   @unique  // 库存单位
+  stock       Int      @default(0)  // 库存数量
+  price       Float?   // 价格
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([productId, colorId, sizeId])
+}
+
+model Color {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  code      String           @unique
+  variants  ProductVariant[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Size {
+  id        String           @id @default(uuid())
+  name      String           @unique
+  code      String           @unique
+  variants  ProductVariant[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Brand {
+  id        String    @id @default(uuid())
+  name      String    @unique
+  code      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model ProductionOrder {
+  id          String   @id @default(uuid())
+  orderNumber String   @unique
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  quantity    Int
+  startDate   DateTime
+  endDate     DateTime
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  entityId  String
+  entityType String
+  userId    String
+  changes   Json
+  createdAt DateTime @default(now())
+} 

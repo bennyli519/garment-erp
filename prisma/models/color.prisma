@@ -1,0 +1,32 @@
+model Color {
+  id          String    @id @default(uuid())
+  code        String    @unique  // 颜色编码
+  name        String    // 颜色名称
+  hexCode     String?   // 颜色十六进制码
+  description String?   // 描述
+  status      String    // active, inactive
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  products    ProductColorAssignment[]
+  productionOrders ProductionOrder[]
+
+  @@map("colors")
+}
+
+model ProductColorAssignment {
+  id          String    @id @default(uuid())
+  productId   String
+  colorId     String
+  isDefault   Boolean   @default(false)  // 是否默认颜色
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  product     Product   @relation(fields: [productId], references: [id])
+  color       Color     @relation(fields: [colorId], references: [id])
+
+  @@unique([productId, colorId])
+  @@map("product_color_assignments")
+} 

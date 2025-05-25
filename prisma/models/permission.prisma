@@ -1,0 +1,27 @@
+model Permission {
+  id          String    @id @default(uuid())
+  name        String
+  code        String    @unique
+  type        String    // menu, action, api
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId        String
+  permissionId  String
+  createdAt     DateTime  @default(now())
+
+  // 关联
+  role          Role        @relation(fields: [roleId], references: [id])
+  permission    Permission  @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permission_assignments")
+} 

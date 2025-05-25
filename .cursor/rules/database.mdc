@@ -1,0 +1,287 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 数据库设计规范
+
+## 表结构设计
+
+### 系统管理相关表
+
+#### 1. User (用户表)
+- 主要字段：
+  - id: UUID
+  - email: String @unique
+  - password: String (加密存储)
+  - name: String
+  - status: String (active, inactive)
+  - companyId: String
+  - departmentId: String?
+  - emailVerified: DateTime?
+  - image: String?
+  - isActive: Boolean
+  - lastLogin: DateTime?
+- 关联：
+  - company: Company
+  - department: Department?
+  - roles: UserRole[]
+  - employee: Employee?
+  - auditLogs: AuditLog[]
+  - productionOrders: ProductionOrder[]
+
+#### 2. Role (角色表)
+- 主要字段：
+  - id: UUID
+  - name: String
+  - code: String @unique
+  - description: String?
+- 关联：
+  - users: UserRole[]
+  - permissions: RolePermission[]
+
+#### 3. Permission (权限表)
+- 主要字段：
+  - id: UUID
+  - name: String
+  - code: String @unique
+  - type: String (menu, action, api)
+  - description: String?
+- 关联：
+  - roles: RolePermission[]
+
+### 组织架构相关表
+
+#### 4. Company (公司表)
+- 主要字段：
+  - id: UUID
+  - name: String
+  - code: String @unique
+  - status: String (active, inactive)
+  - schemaName: String @unique
+  - address: String?
+  - contact: String?
+  - phone: String?
+- 关联：
+  - users: User[]
+  - employees: Employee[]
+  - departments: Department[]
+
+#### 5. Department (部门表)
+- 主要字段：
+  - id: UUID
+  - name: String
+  - code: String @unique
+  - parentId: String?
+  - path: String
+  - level: Int
+  - status: String (active, inactive)
+  - companyId: String
+- 关联：
+  - company: Company
+  - parent: Department?
+  - children: Department[]
+  - employees: Employee[]
+  - users: User[]
+
+#### 6. Employee (员工表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - name: String
+  - phone: String?
+  - email: String?
+  - position: String?
+  - status: String (active, inactive, resigned)
+  - isActive: Boolean
+  - birthDate: DateTime?
+  - hireDate: DateTime
+  - resignDate: DateTime?
+  - departmentId: String
+  - companyId: String
+  - userId: String? @unique
+- 关联：
+  - company: Company
+  - department: Department
+  - user: User?
+  - processes: EmployeeProcess[]
+
+### 业务相关表
+
+#### 7. Process (工序表)
+- 主要字段：
+  - id: UUID
+  - name: String
+  - code: String @unique
+  - shortName: String
+  - multiplier: Float
+  - basePrice: Float
+  - finalPrice: Float
+  - requirements: String?
+  - qualityNotes: String?
+  - description: String?
+  - standardTime: Float?
+  - status: String (active, inactive)
+  - remark: String?
+- 关联：
+  - styleProcesses: ProductProcessAssignment[]
+  - employees: EmployeeProcess[]
+
+#### 8. Product (款式表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - name: String
+  - description: String?
+  - status: String (draft, active, inactive)
+- 关联：
+  - processes: ProductProcessAssignment[]
+  - colors: ProductColorAssignment[]
+  - sizes: ProductSizeAssignment[]
+  - brands: ProductBrandAssignment[]
+  - productionOrders: ProductionOrder[]
+
+#### 9. Color (颜色表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - name: String
+  - hexCode: String?
+  - description: String?
+  - status: String (active, inactive)
+- 关联：
+  - products: ProductColorAssignment[]
+  - productionOrders: ProductionOrder[]
+
+#### 10. Size (尺码表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - name: String
+  - sizeType: String?
+  - order: Int?
+  - description: String?
+- 关联：
+  - products: ProductSizeAssignment[]
+  - productionOrders: ProductionOrder[]
+
+#### 11. Brand (商标表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - name: String
+  - logo: String?
+  - description: String?
+  - status: String (active, inactive)
+- 关联：
+  - products: ProductBrandAssignment[]
+
+#### 12. ProductionOrder (生产单表)
+- 主要字段：
+  - id: UUID
+  - code: String @unique
+  - productId: String
+  - colorId: String
+  - sizeId: String
+  - quantity: Int
+  - status: String (draft, confirmed, in_production, completed, cancelled)
+  - startDate: DateTime?
+  - endDate: DateTime?
+  - remark: String?
+  - createdBy: String
+- 关联：
+  - product: Product
+  - color: Color
+  - size: Size
+  - creator: User
+
+#### 13. AuditLog (审计日志表)
+- 主要字段：
+  - id: UUID
+  - userId: String
+  - action: String (create, update, delete)
+  - resource: String
+  - resourceId: String
+  - details: Json
+- 关联：
+  - user: User
+
+## 关联表
+
+### 用户相关关联
+1. UserRole (用户-角色)
+   - userId + roleId: 复合主键
+   - createdAt: DateTime
+
+2. RolePermission (角色-权限)
+   - roleId + permissionId: 复合主键
+   - createdAt: DateTime
+
+### 业务相关关联
+1. EmployeeProcess (员工-工序)
+   - id: UUID
+   - employeeId: String
+   - processId: String
+   - proficiency: Int
+   - isMain: Boolean
+   - unique: [employeeId, processId]
+
+2. ProductProcessAssignment (款式-工序)
+   - id: UUID
+   - productId: String
+   - processId: String
+   - sequence: Int
+   - remark: String?
+
+3. ProductColorAssignment (款式-颜色)
+   - id: UUID
+   - productId: String
+   - colorId: String
+   - isDefault: Boolean
+   - unique: [productId, colorId]
+
+4. ProductSizeAssignment (款式-尺码)
+   - id: UUID
+   - productId: String
+   - sizeId: String
+   - isDefault: Boolean
+   - unique: [productId, sizeId]
+
+5. ProductBrandAssignment (款式-商标)
+   - id: UUID
+   - productId: String
+   - brandId: String
+   - position: String?
+   - isMain: Boolean
+   - unique: [productId, brandId]
+
+## 数据库规范
+
+### 命名规范
+1. 表名使用小写下划线命名法 (snake_case)
+2. 字段名使用驼峰命名法 (camelCase)
+3. 关联表使用 `_assignments` 后缀
+4. 枚举值使用小写下划线命名
+
+### 字段规范
+1. 所有表必须包含：
+   - id: UUID 主键
+   - createdAt: 创建时间
+   - updatedAt: 更新时间
+2. 状态字段统一使用 status
+3. 编码字段统一使用 code
+4. 名称字段统一使用 name
+5. 描述字段统一使用 description
+
+### 索引规范
+1. 所有外键字段自动创建索引
+2. 编码字段 (code) 必须创建唯一索引
+3. 用户邮箱必须创建唯一索引
+4. 部门路径 (path) 必须创建索引
+5. 员工工号必须创建唯一索引
+
+### 数据完整性
+1. 禁止物理删除关键数据，使用状态标记
+2. 关联数据必须保证引用完整性
+3. 必填字段不允许为空
+4. 状态字段必须限制有效值范围

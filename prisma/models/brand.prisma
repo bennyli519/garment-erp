@@ -1,0 +1,32 @@
+model Brand {
+  id          String    @id @default(uuid())
+  code        String    @unique  // 商标编码
+  name        String    // 商标名称
+  logo        String?   // 商标logo URL
+  description String?   // 描述
+  status      String    // active, inactive
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  products    ProductBrandAssignment[]
+
+  @@map("brands")
+}
+
+model ProductBrandAssignment {
+  id          String    @id @default(uuid())
+  productId   String
+  brandId     String
+  position    String?   // 商标位置
+  isMain      Boolean   @default(false)  // 是否主商标
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  product     Product   @relation(fields: [productId], references: [id])
+  brand       Brand     @relation(fields: [brandId], references: [id])
+
+  @@unique([productId, brandId])
+  @@map("product_brand_assignments")
+} 

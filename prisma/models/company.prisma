@@ -1,0 +1,20 @@
+// 公司模型
+model Company {
+  id          String   @id @default(uuid())
+  name        String   // 公司名称
+  code        String   @unique  // 公司编码
+  status      String   // 状态：active, inactive
+  schemaName  String   @unique  // 对应的schema名称
+  address     String?  // 公司地址
+  contact     String?  // 联系人
+  phone       String?  // 联系电话
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // 关联
+  users       User[]
+  employees   Employee[]
+  departments Department[]
+
+  @@map("companies")
+} 

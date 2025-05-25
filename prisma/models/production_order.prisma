@@ -1,0 +1,23 @@
+model ProductionOrder {
+  id              String    @id @default(uuid())
+  code            String    @unique  // 生产单号
+  productId       String    // 关联款式
+  colorId         String    // 关联颜色
+  sizeId          String    // 关联尺码
+  quantity        Int       // 生产数量
+  status          String    // draft, confirmed, in_production, completed, cancelled
+  startDate       DateTime? // 开始日期
+  endDate         DateTime? // 预计完成日期
+  remark          String?   // 备注
+  createdBy       String    // 创建人
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // 关联
+  product         Product   @relation(fields: [productId], references: [id])
+  color           Color     @relation(fields: [colorId], references: [id])
+  size            Size      @relation(fields: [sizeId], references: [id])
+  creator         User      @relation(fields: [createdBy], references: [id])
+
+  @@map("production_orders")
+} 

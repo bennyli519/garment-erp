@@ -1,0 +1,40 @@
+// 用户模型
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String    // 加密存储
+  name          String
+  status        String    // active, inactive
+  companyId     String
+  departmentId  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  emailVerified DateTime?
+  image         String?
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+
+  // 关联
+  company       Company   @relation(fields: [companyId], references: [id])
+  department    Department? @relation(fields: [departmentId], references: [id])
+  roles         UserRole[]
+  employee      Employee?
+  auditLogs     AuditLog[]
+  productionOrders ProductionOrder[]
+
+  @@map("users")
+}
+
+// 用户-角色关联
+model UserRole {
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  // 关联
+  user      User     @relation(fields: [userId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_role_assignments")
+} 

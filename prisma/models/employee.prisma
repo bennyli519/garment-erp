@@ -1,0 +1,43 @@
+model Employee {
+  id            String    @id @default(uuid())
+  code          String    @unique  // 工号
+  name          String
+  phone         String?
+  email         String?
+  position      String?   // 职位
+  status        String    // active, inactive, resigned
+  isActive      Boolean   @default(true)  // 是否在职
+  birthDate     DateTime? // 出生日期
+  hireDate      DateTime  // 入职日期
+  resignDate    DateTime? // 离职日期
+  departmentId  String
+  companyId     String
+  userId        String?   @unique // 关联用户ID（如果有系统账号）
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // 关联
+  company      Company    @relation(fields: [companyId], references: [id])
+  department   Department @relation(fields: [departmentId], references: [id])
+  user         User?      @relation(fields: [userId], references: [id])
+  processes    EmployeeProcess[]
+
+  @@map("employees")
+}
+
+model EmployeeProcess {
+  id          String    @id @default(uuid())
+  employeeId  String
+  processId   String
+  proficiency Int       @default(1)  // 熟练度等级
+  isMain      Boolean   @default(false)  // 是否主要工序
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // 关联
+  employee    Employee  @relation(fields: [employeeId], references: [id])
+  process     Process   @relation(fields: [processId], references: [id])
+
+  @@unique([employeeId, processId])
+  @@map("employee_process_assignments")
+} 

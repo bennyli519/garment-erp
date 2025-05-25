@@ -1,0 +1,14 @@
+model AuditLog {
+  id          String    @id @default(uuid())
+  userId      String
+  action      String    // create, update, delete
+  resource    String    // 资源类型
+  resourceId  String    // 资源ID
+  details     Json      // 变更详情
+  createdAt   DateTime  @default(now())
+
+  // 关联
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+} 
