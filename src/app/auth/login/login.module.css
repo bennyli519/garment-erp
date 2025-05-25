@@ -1,0 +1,42 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.background {
+  display: none;
+  flex: 1;
+  background: linear-gradient(135deg, #1677ff 0%, #4096ff 100%);
+  padding: 48px;
+  position: relative;
+}
+
+.brandingText {
+  position: absolute;
+  bottom: 48px;
+  max-width: 480px;
+}
+
+@media (min-width: 1024px) {
+  .background {
+    display: block;
+  }
+} 

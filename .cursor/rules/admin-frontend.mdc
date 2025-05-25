@@ -1,7 +1,7 @@
 ---
-description:
-globs:
-alwaysApply: false
+description: 
+globs: 
+alwaysApply: true
 ---
 @group("Admin Frontend")
 @title("Admin Portal Frontend Guidelines")

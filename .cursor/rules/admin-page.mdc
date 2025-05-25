@@ -1,0 +1,191 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Admin Page Development Guidelines
+
+@group("Admin Pages")
+@title("Admin Page Development Guidelines")
+@description("Admin Portal 页面开发规范和流程指南")
+@version("1.0.0")
+@author("Benny")
+@tags(["frontend", "admin", "page", "guidelines"])
+
+## 目录结构规范
+
+### 1. 页面组织结构
+
+```
+pages/
+├── [module]/              # 模块目录
+│   ├── page.tsx          # 页面组件
+│   ├── components/       # 页面专用组件
+│   │   ├── features/    # 功能组件
+│   │   └── ui/         # UI组件
+│   └── hooks/          # 页面专用钩子
+└── [module]/
+    └── [submodule]/    # 子模块目录
+        └── page.tsx    # 子模块页面
+```
+
+@rule("page-structure")
+### 2. 页面文件结构
+
+- 使用 'use client' 指令
+- 导入顺序：
+  1. React 核心
+  2. 第三方库
+  3. 自定义组件
+  4. 类型定义
+  5. 工具函数
+
+```typescript
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Table, Form, Button } from 'antd'
+import { CustomComponent } from './components'
+import type { DataType } from './types'
+import { utils } from '@/lib/utils'
+```
+
+@rule("page-naming")
+### 3. 命名规范
+
+- 页面文件：`page.tsx`
+- 页面组件：使用 Page 后缀（如 `EmployeePage`）
+- 接口名称：描述性名称（如 `Employee`, `ProductionOrder`）
+- 常量命名：使用 camelCase（如 `mockData`, `tableColumns`）
+
+@rule("component-organization")
+### 4. 组件组织
+
+- 状态管理在组件顶部声明
+- 工具函数和常量在组件外部声明
+- 组件内部结构：
+  1. 状态声明
+  2. 副作用
+  3. 事件处理
+  4. 渲染逻辑
+
+@rule("data-management")
+### 5. 数据管理
+
+- 使用 TypeScript 接口定义数据结构
+- Mock 数据放在组件外部
+- 状态更新使用不可变方式
+- 复杂状态使用 Zustand 管理
+
+@rule("ui-components")
+### 6. UI 组件规范
+
+- 使用 Ant Design 组件库
+- 表格页面标准结构：
+  1. 操作按钮区
+  2. 表格组件
+  3. 弹窗表单
+- 表单页面标准结构：
+  1. 表单项分组
+  2. 提交/取消按钮
+  3. 验证规则
+
+@rule("modal-forms")
+### 7. 弹窗表单规范
+
+- 使用 Form.useForm 管理表单状态
+- 表单布局使用 vertical
+- 必填字段添加验证规则
+- 提供清晰的错误提示
+- 成功/失败处理
+
+@rule("event-handling")
+### 8. 事件处理规范
+
+- 事件处理函数使用 handle 前缀
+- 异步操作使用 async/await
+- 错误处理使用 try/catch
+- 提供用户反馈（成功/失败提示）
+
+@rule("page-features")
+### 9. 页面功能规范
+
+基础页面必须包含：
+- 列表展示
+- 新增功能
+- 编辑功能
+- 删除功能
+- 状态管理
+- 数据验证
+
+@rule("responsive-design")
+### 10. 响应式设计
+
+- 使用 Ant Design 的响应式组件
+- 表格适配小屏幕
+- 弹窗宽度合理设置
+- 组件间距保持一致
+
+## 开发流程
+
+@rule("development-flow")
+### 1. 页面开发流程
+
+1. 创建页面目录和文件
+2. 定义数据接口和Mock数据
+3. 实现基础UI组件
+4. 添加交互功能
+5. 实现数据流
+6. 添加错误处理
+7. 优化性能
+8. 测试和调试
+
+@rule("testing")
+### 2. 测试规范
+
+- 实现单元测试
+- 测试主要交互流程
+- 测试错误处理
+- 测试边界情况
+
+@rule("performance")
+### 3. 性能优化
+
+- 使用 useMemo/useCallback
+- 合理拆分组件
+- 避免不必要的重渲染
+- 优化大数据渲染
+
+## 最佳实践
+
+@rule("best-practices")
+### 1. 代码质量
+
+- 保持代码简洁清晰
+- 添加必要的注释
+- 遵循 TypeScript 最佳实践
+- 使用 ESLint 和 Prettier
+
+@rule("error-handling")
+### 2. 错误处理
+
+- 统一的错误处理机制
+- 友好的错误提示
+- 错误日志记录
+- 优雅的降级处理
+
+@rule("security")
+### 3. 安全考虑
+
+- 输入数据验证
+- XSS 防护
+- CSRF 防护
+- 敏感数据处理
+
+@rule("accessibility")
+### 4. 可访问性
+
+- 语义化 HTML
+- 键盘导航支持
+- 屏幕阅读器支持
+- 颜色对比度达标
