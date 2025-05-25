@@ -1,0 +1,240 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Garment ERP Architecture Rules
+
+## Directory Structure Rules
+
+```
+src/
+├── app/                    # Frontend code
+│   ├── admin/             # Admin portal
+│   │   ├── components/    # Components
+│   │   │   ├── layout/   # Layout components
+│   │   │   ├── features/ # Feature components
+│   │   │   └── ui/      # Base UI components
+│   │   ├── hooks/       # React Hooks
+│   │   ├── stores/      # State management
+│   │   └── styles/      # Style files
+│   │
+│   ├── shared/          # Shared frontend code
+│   │   └── utils/      # Shared utilities
+│   │
+│   └── (portal)/        # Portal (reserved)
+│
+└── backend/              # Backend code
+    ├── api/             # API layer
+    │   ├── controllers/ # Controllers
+    │   ├── middlewares/ # Middlewares
+    │   ├── routes/     # Route definitions
+    │   └── validators/ # Request validation
+    │
+    ├── core/           # Core business logic
+    │   ├── use-cases/  # Business use cases
+    │   ├── services/   # Application services
+    │   └── interfaces/ # Use case interfaces
+    │
+    ├── domain/         # Domain layer
+    │   ├── entities/   # Domain entities
+    │   ├── value-objects/ # Value objects
+    │   ├── aggregates/    # Aggregate roots
+    │   ├── events/        # Domain events
+    │   └── interfaces/    # Domain interfaces
+    │
+    ├── infrastructure/ # Infrastructure layer
+    │   ├── database/   # Database related
+    │   ├── auth/       # Authentication
+    │   └── shared/     # Shared infrastructure
+    │
+    └── shared/         # Backend shared code
+        ├── utils/      # Utilities
+        ├── constants/  # Constants
+        ├── types/      # Type definitions
+        └── errors/     # Error definitions
+```
+
+## Naming Conventions
+
+### File Naming
+- Entity: `tenant.ts`
+- Use Case: `create-tenant.ts`
+- Controller: `tenant.controller.ts`
+- Repository: `tenant.repository.ts`
+- Component: `TenantList.tsx`
+
+### Class Naming
+- Entity: `Tenant`
+- Use Case: `CreateTenantUseCase`
+- Controller: `TenantController`
+- Repository: `TenantRepository`
+- Component: `TenantList`
+
+## Code Style Rules
+
+### Domain Layer
+- Entities must use private constructors and static factory methods
+- All business rules must be encapsulated within domain entities
+- Use value objects for attributes without identity
+- Aggregate roots must maintain consistency boundaries
+
+```typescript
+// Entity Example
+export class Tenant {
+  private constructor(
+    public readonly id: string,
+    private _name: string
+  ) {}
+
+  static create(props: { name: string }): Tenant {
+    // Validate business rules
+    return new Tenant(crypto.randomUUID(), props.name)
+  }
+
+  update(props: { name?: string }): void {
+    // Validate business rules before update
+  }
+}
+```
+
+### Application Layer
+- Use cases should not contain business rules
+- Inject dependencies through constructor
+- Return DTOs instead of domain objects
+- Handle transactions at this layer
+
+```typescript
+export class CreateTenantUseCase {
+  constructor(private tenantRepository: ITenantRepository) {}
+
+  async execute(data: CreateTenantDTO): Promise<TenantResponseDTO> {
+    // Orchestrate domain objects
+  }
+}
+```
+
+### API Layer
+- Controllers should be thin
+- Use middleware for cross-cutting concerns
+- Validate requests before processing
+- Standardize error responses
+
+### Error Handling
+- Use custom error classes
+- Include error codes and status codes
+- Provide meaningful error messages
+- Handle all edge cases
+
+```typescript
+export class AppError extends Error {
+  constructor(
+    public readonly message: string,
+    public readonly statusCode: number = 500,
+    public readonly code?: string
+  ) {
+    super(message)
+  }
+}
+```
+
+## Frontend Rules
+
+### Component Structure
+- One component per file
+- Use functional components with hooks
+- Keep components focused and small
+- Implement proper prop types
+
+### State Management
+- Use React Query for server state
+- Use Zustand for client state
+- Organize stores by feature
+- Keep state minimal
+
+### Styling
+- Use Tailwind CSS for styling
+- Follow mobile-first approach
+- Use CSS modules for component-specific styles
+- Maintain consistent spacing and colors
+
+## Testing Rules
+
+### Unit Tests
+- Test domain entities thoroughly
+- Mock external dependencies
+- Focus on business logic
+- Use meaningful test descriptions
+
+### Integration Tests
+- Test API endpoints
+- Test database operations
+- Test authentication flows
+- Use proper test data setup
+
+## Best Practices
+
+### General
+- Follow Single Responsibility Principle
+- Use Dependency Injection
+- Keep functions pure when possible
+- Document complex logic
+
+### Code Organization
+- Group related files together
+- Use index files for exports
+- Keep file size manageable
+- Use meaningful file names
+
+### Performance
+- Implement proper caching
+- Optimize database queries
+- Use proper indexing
+- Monitor API response times
+
+### Security
+- Validate all inputs
+- Use proper authentication
+- Implement rate limiting
+- Follow security best practices
+
+## Development Workflow
+
+1. Create feature branch
+2. Implement domain models
+3. Create use cases
+4. Implement infrastructure
+5. Add API endpoints
+6. Develop UI components
+7. Write tests
+8. Submit PR for review
+
+## IDE Configuration
+
+### VSCode Settings
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  },
+  "typescript.preferences.importModuleSpecifier": "non-relative"
+}
+```
+
+### Extensions
+- ESLint
+- Prettier
+- TypeScript
+- Tailwind CSS IntelliSense
+- GitLens
+
+## Commit Guidelines
+
+- feat: New feature
+- fix: Bug fix
+- docs: Documentation
+- style: Formatting
+- refactor: Code restructuring
+- test: Testing
+- chore: Maintenance

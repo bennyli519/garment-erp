@@ -1,0 +1,184 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+@group("Admin Frontend")
+@title("Admin Portal Frontend Guidelines")
+@description("Admin Portal 前端开发规范和流程指南")
+@version("1.0.0")
+@author("Benny")
+@tags(["frontend", "admin", "guidelines"])
+
+# Admin Portal Frontend Guidelines
+
+## 开发规范
+
+### 1. 目录结构规范
+
+```
+admin/
+├── components/
+│   ├── features/          # 业务功能组件
+│   │   └── [feature]/    # 具体功能模块
+│   │       ├── components/  # 功能相关组件
+│   │       ├── hooks/      # 功能相关钩子
+│   │       └── types.ts    # 类型定义
+│   ├── layout/           # 布局组件
+│   └── ui/               # 通用UI组件
+├── hooks/                # 全局钩子
+├── stores/              # 状态管理
+└── styles/              # 样式文件
+```
+
+@rule("file-naming")
+### 2. 命名规范
+
+- **文件命名**：
+  - 组件文件：使用 PascalCase（如 `UserList.tsx`）
+  - 工具文件：使用 kebab-case（如 `auth-utils.ts`）
+  - 样式文件：与组件同名，使用 `.module.css` 后缀
+  - 类型文件：使用 `.types.ts` 后缀
+
+- **组件命名**：
+  - 使用 PascalCase
+  - 页面组件以 Page 结尾（如 `UserListPage`）
+  - 容器组件以 Container 结尾（如 `UserListContainer`）
+  - 通用组件使用明确的名称（如 `DataTable`, `SearchForm`）
+
+@rule("component-structure")
+### 3. 组件开发规范
+
+- **组件结构**：
+  ```typescript
+  // 导入顺序
+  import { useState, useEffect } from 'react'     // React 核心
+  import { useRouter } from 'next/navigation'     // Next.js
+  import { Table, Form, Input } from 'antd'       // UI 库
+  import { useUserData } from '@/hooks'           // 自定义 hooks
+  import { UserService } from '@/services'        // 服务
+  import type { User } from '@/types'             // 类型
+
+  // 类型定义
+  interface Props {
+    // ...
+  }
+
+  // 组件实现
+  export function UserList({ ... }: Props) {
+    // hooks 声明
+    // 状态管理
+    // 事件处理
+    // 渲染逻辑
+  }
+  ```
+
+@rule("state-management")
+- **状态管理**：
+  - 使用 `zustand` 进行全局状态管理
+  - 组件内部状态使用 `useState`
+  - 复杂表单状态使用 `Form.useForm`
+
+@rule("styling")
+### 4. 样式规范
+
+- 优先使用 Ant Design 的样式系统
+- 自定义样式使用 CSS Modules
+- 遵循以下顺序：
+  1. Layout Properties (position, display, etc.)
+  2. Box Model Properties (margin, padding, etc.)
+  3. Visual Properties (color, background, etc.)
+  4. Typography Properties (font, text, etc.)
+  5. Misc Properties (cursor, overflow, etc.)
+
+## 开发流程
+
+@rule("feature-development")
+### 1. 新功能开发流程
+
+1. **需求分析**
+   - 确认功能需求和交互设计
+   - 确定数据结构和 API 接口
+   - 规划组件结构
+
+2. **开发步骤**
+   - 创建功能目录结构
+   - 实现数据模型和类型定义
+   - 开发 UI 组件
+   - 实现业务逻辑
+   - 添加错误处理
+   - 优化性能
+
+3. **测试验证**
+   - 单元测试
+   - 集成测试
+   - 性能测试
+   - 兼容性测试
+
+@rule("component-development")
+### 2. 组件开发流程
+
+1. **组件设计**
+   - 确定组件职责
+   - 设计 Props 接口
+   - 规划内部状态
+   - 确定子组件结构
+
+2. **实现步骤**
+   - 创建基础组件结构
+   - 实现核心功能
+   - 添加交互逻辑
+   - 处理边界情况
+   - 优化性能
+
+3. **复用和维护**
+   - 提取通用逻辑到 hooks
+   - 优化组件接口
+   - 编写文档和示例
+   - 添加测试用例
+
+@rule("code-review")
+### 3. 代码审查清单
+
+- [ ] 代码是否遵循命名规范
+- [ ] 组件结构是否清晰
+- [ ] 是否有适当的类型定义
+- [ ] 是否处理了错误情况
+- [ ] 是否有必要的注释
+- [ ] 是否有测试覆盖
+- [ ] 性能是否经过优化
+- [ ] 是否符合无障碍标准
+
+## 最佳实践
+
+@rule("performance")
+### 1. 性能优化
+
+- 使用 `useMemo` 和 `useCallback` 优化性能
+- 实现虚拟滚动处理大数据列表
+- 合理使用 Code Splitting
+- 优化图片和资源加载
+
+@rule("error-handling")
+### 2. 错误处理
+
+- 实现全局错误边界
+- 统一的错误提示机制
+- 完善的日志记录
+- 友好的错误恢复机制
+
+@rule("state-management-best-practices")
+### 3. 状态管理
+
+- 按功能模块组织 store
+- 实现持久化存储
+- 处理并发状态更新
+- 优化状态订阅
+
+@rule("security")
+### 4. 安全考虑
+
+- 实现 CSRF 防护
+- XSS 防护
+- 敏感数据处理
+- 权限控制
