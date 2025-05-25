@@ -155,6 +155,7 @@ const findBreadcrumbPath = (items: MenuItem[], targetPath: string): MenuItem[] =
       return [item]
     }
     if (item.children) {
+      const path = findBreadcrumbPath(item.children, targetPath)
       if (path.length) {
         return [item, ...path]
       }

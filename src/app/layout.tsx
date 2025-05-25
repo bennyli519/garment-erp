@@ -6,7 +6,7 @@ import zhCN from 'antd/locale/zh_CN'
 import { AntdRegistry } from '@ant-design/nextjs-registry'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { SessionProvider } from '@/components/providers/session-provider'
+import { SessionProvider } from '@/app/admin/providers/session-provider'
 
 const inter = Inter({ subsets: ["latin"] });
 

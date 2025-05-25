@@ -36,7 +36,7 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            return null
+            throw new Error("请输入邮箱和密码")
           }
 
           const user = await prisma.user.findUnique({
@@ -50,14 +50,18 @@ export const authOptions: NextAuthOptions = {
             }
           })
 
-          if (!user || !user.isActive) {
-            return null
+          if (!user) {
+            throw new Error("用户不存在")
+          }
+
+          if (!user.isActive) {
+            throw new Error("用户已被禁用")
           }
 
           const isValid = await bcrypt.compare(credentials.password, user.password)
 
           if (!isValid) {
-            return null
+            throw new Error("密码错误")
           }
 
           return {
@@ -70,29 +74,35 @@ export const authOptions: NextAuthOptions = {
           }
         } catch (error) {
           console.error('Auth error:', error)
-          return null
+          throw error
         }
       }
     })
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
-        token.company = user.company
-        token.department = user.department
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+          company: user.company,
+          department: user.department
+        }
       }
       return token
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.role = token.role
-        session.user.company = token.company
-        session.user.department = token.department
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: token.id,
+          role: token.role,
+          company: token.company,
+          department: token.department
+        }
       }
-      return session
     }
   }
 } 

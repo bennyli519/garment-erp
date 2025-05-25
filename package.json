@@ -7,9 +7,12 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"prisma:generate": "prisma generate",
-		"prisma:migrate": "prisma migrate dev",
-		"prisma:seed": "NODE_OPTIONS='--loader ts-node/esm' ts-node prisma/seed.ts"
+		"db:init": "prisma migrate dev --name init",
+		"db:migrate": "prisma migrate deploy",
+		"db:reset": "prisma migrate reset --force",
+		"db:generate": "prisma generate",
+		"db:seed": "NODE_OPTIONS='--loader ts-node/esm' ts-node prisma/seed.ts",
+		"db:studio": "prisma studio"
 	},
 	"prisma": {
 		"seed": "NODE_OPTIONS='--loader ts-node/esm' ts-node prisma/seed.ts"

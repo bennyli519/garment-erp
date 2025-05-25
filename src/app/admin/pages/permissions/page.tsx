@@ -46,7 +46,7 @@ const permissionTree = [
     title: '系统管理',
     key: 'system',
     children: [
-      {
+  {
         title: '员工管理',
         key: 'employee',
         children: [
