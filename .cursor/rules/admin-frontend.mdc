@@ -12,33 +12,37 @@ alwaysApply: true
 
 # Admin Portal Frontend Guidelines
 
-## 开发规范
-
-### 1. 目录结构规范
+## 目录结构规范
 
 ```
 admin/
-├── components/
-│   ├── features/          # 业务功能组件
-│   │   └── [feature]/    # 具体功能模块
+├── components/          # 组件目录
+│   ├── features/       # 业务功能组件
+│   │   └── [feature]/  # 具体功能模块
 │   │       ├── components/  # 功能相关组件
 │   │       ├── hooks/      # 功能相关钩子
 │   │       └── types.ts    # 类型定义
-│   ├── layout/           # 布局组件
-│   └── ui/               # 通用UI组件
-├── hooks/                # 全局钩子
-├── stores/              # 状态管理
-└── styles/              # 样式文件
+│   ├── layout/        # 布局组件
+│   └── ui/           # 通用UI组件
+├── pages/            # 页面组件
+│   └── [module]/     # 模块页面
+│       ├── page.tsx  # 页面组件
+│       ├── components/ # 页面专用组件
+│       └── hooks/     # 页面专用钩子
+├── hooks/           # 全局钩子
+├── stores/         # 状态管理
+└── styles/         # 样式文件
 ```
 
 @rule("file-naming")
-### 2. 命名规范
+### 命名规范
 
 - **文件命名**：
   - 组件文件：使用 PascalCase（如 `UserList.tsx`）
   - 工具文件：使用 kebab-case（如 `auth-utils.ts`）
   - 样式文件：与组件同名，使用 `.module.css` 后缀
   - 类型文件：使用 `.types.ts` 后缀
+  - 页面文件：统一使用 `page.tsx`
 
 - **组件命名**：
   - 使用 PascalCase
@@ -47,10 +51,12 @@ admin/
   - 通用组件使用明确的名称（如 `DataTable`, `SearchForm`）
 
 @rule("component-structure")
-### 3. 组件开发规范
+### 组件开发规范
 
 - **组件结构**：
   ```typescript
+  'use client'  // 对于客户端组件必须添加
+
   // 导入顺序
   import { useState, useEffect } from 'react'     // React 核心
   import { useRouter } from 'next/navigation'     // Next.js
@@ -65,7 +71,7 @@ admin/
   }
 
   // 组件实现
-  export function UserList({ ... }: Props) {
+  export default function ComponentName({ ... }: Props) {
     // hooks 声明
     // 状态管理
     // 事件处理
@@ -73,112 +79,190 @@ admin/
   }
   ```
 
-@rule("state-management")
-- **状态管理**：
-  - 使用 `zustand` 进行全局状态管理
-  - 组件内部状态使用 `useState`
-  - 复杂表单状态使用 `Form.useForm`
+@rule("page-structure")
+### 页面组件规范
 
-@rule("styling")
-### 4. 样式规范
+- **基本结构**：
+  ```typescript
+  'use client'
 
-- 优先使用 Ant Design 的样式系统
-- 自定义样式使用 CSS Modules
-- 遵循以下顺序：
-  1. Layout Properties (position, display, etc.)
-  2. Box Model Properties (margin, padding, etc.)
-  3. Visual Properties (color, background, etc.)
-  4. Typography Properties (font, text, etc.)
-  5. Misc Properties (cursor, overflow, etc.)
+  import AdminLayout from '@/app/admin/components/layout/admin-layout'
+  
+  export default function PageName() {
+    return (
+      <AdminLayout>
+        <div className="min-h-[calc(100vh-64px)]">
+          {/* 页面内容 */}
+        </div>
+      </AdminLayout>
+    )
+  }
+  ```
 
-## 开发流程
+- **表单页面结构**：
+  ```typescript
+  <Card className="w-full max-w-md">
+    <div className="text-center mb-8">
+      <h1 className="text-2xl font-semibold">标题</h1>
+      <p className="text-gray-600">描述文本</p>
+    </div>
+    
+    <Form
+      form={form}
+      layout="vertical"
+      onFinish={handleSubmit}
+      requiredMark={false}
+    >
+      {/* 表单项 */}
+    </Form>
+  </Card>
+  ```
 
-@rule("feature-development")
-### 1. 新功能开发流程
+@rule("form-validation")
+### 表单验证规范
 
-1. **需求分析**
-   - 确认功能需求和交互设计
-   - 确定数据结构和 API 接口
-   - 规划组件结构
+- **必填验证**：
+  ```typescript
+  rules={[
+    { required: true, message: '请输入字段名' }
+  ]}
+  ```
 
-2. **开发步骤**
-   - 创建功能目录结构
-   - 实现数据模型和类型定义
-   - 开发 UI 组件
-   - 实现业务逻辑
-   - 添加错误处理
-   - 优化性能
+- **密码验证**：
+  ```typescript
+  rules={[
+    { required: true, message: '请输入密码' },
+    { min: 8, message: '密码至少8个字符' },
+    { 
+      pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+      message: '密码必须包含大小写字母和数字'
+    }
+  ]}
+  ```
 
-3. **测试验证**
-   - 单元测试
-   - 集成测试
-   - 性能测试
-   - 兼容性测试
+- **确认密码验证**：
+  ```typescript
+  rules={[
+    { required: true, message: '请确认密码' },
+    ({ getFieldValue }) => ({
+      validator(_, value) {
+        if (!value || getFieldValue('password') === value) {
+          return Promise.resolve();
+        }
+        return Promise.reject(new Error('两次输入的密码不一致'));
+      },
+    }),
+  ]}
+  ```
 
-@rule("component-development")
-### 2. 组件开发流程
+@rule("api-integration")
+### API 集成规范
 
-1. **组件设计**
-   - 确定组件职责
-   - 设计 Props 接口
-   - 规划内部状态
-   - 确定子组件结构
+- **请求处理**：
+  ```typescript
+  const handleSubmit = async (values: FormData) => {
+    try {
+      const response = await fetch('/api/endpoint', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
 
-2. **实现步骤**
-   - 创建基础组件结构
-   - 实现核心功能
-   - 添加交互逻辑
-   - 处理边界情况
-   - 优化性能
+      if (!response.ok) {
+        throw new Error('请求失败');
+      }
 
-3. **复用和维护**
-   - 提取通用逻辑到 hooks
-   - 优化组件接口
-   - 编写文档和示例
-   - 添加测试用例
-
-@rule("code-review")
-### 3. 代码审查清单
-
-- [ ] 代码是否遵循命名规范
-- [ ] 组件结构是否清晰
-- [ ] 是否有适当的类型定义
-- [ ] 是否处理了错误情况
-- [ ] 是否有必要的注释
-- [ ] 是否有测试覆盖
-- [ ] 性能是否经过优化
-- [ ] 是否符合无障碍标准
-
-## 最佳实践
-
-@rule("performance")
-### 1. 性能优化
-
-- 使用 `useMemo` 和 `useCallback` 优化性能
-- 实现虚拟滚动处理大数据列表
-- 合理使用 Code Splitting
-- 优化图片和资源加载
+      message.success('操作成功');
+      router.push('/success-page');
+    } catch (error) {
+      message.error('操作失败，请重试');
+    }
+  };
+  ```
 
 @rule("error-handling")
-### 2. 错误处理
+### 错误处理规范
 
-- 实现全局错误边界
-- 统一的错误提示机制
-- 完善的日志记录
-- 友好的错误恢复机制
+- **统一错误提示**：
+  - 使用 Ant Design 的 message 组件
+  - 提供清晰的错误信息
+  - 适当的错误恢复机制
 
-@rule("state-management-best-practices")
-### 3. 状态管理
+- **表单错误处理**：
+  - 表单验证错误显示在字段下方
+  - API 错误显示在表单顶部
+  - 网络错误使用全局提示
 
-- 按功能模块组织 store
-- 实现持久化存储
-- 处理并发状态更新
-- 优化状态订阅
+@rule("styling")
+### 样式规范
+
+- **使用 Tailwind CSS**：
+  - 遵循移动优先原则
+  - 使用语义化的类名
+  - 保持一致的间距和颜色
+
+- **布局规范**：
+  - 页面最小高度：`min-h-[calc(100vh-64px)]`
+  - 居中布局：`flex items-center justify-center`
+  - 卡片最大宽度：`max-w-md`
+
+@rule("responsive-design")
+### 响应式设计
+
+- **断点设置**：
+  - sm: 640px
+  - md: 768px
+  - lg: 1024px
+  - xl: 1280px
+  - 2xl: 1536px
+
+- **响应式布局**：
+  - 使用 Flexbox 和 Grid
+  - 适配不同屏幕尺寸
+  - 保持内容可读性
+
+@rule("performance")
+### 性能优化
+
+- **组件优化**：
+  - 使用 `useMemo` 和 `useCallback`
+  - 避免不必要的重渲染
+  - 合理拆分组件
+
+- **资源优化**：
+  - 图片懒加载
+  - 代码分割
+  - 缓存策略
+
+@rule("accessibility")
+### 可访问性
+
+- **基本要求**：
+  - 语义化 HTML
+  - 键盘导航支持
+  - 适当的颜色对比度
+  - ARIA 属性支持
 
 @rule("security")
-### 4. 安全考虑
+### 安全考虑
 
-- 实现 CSRF 防护
-- XSS 防护
-- 敏感数据处理
-- 权限控制
+- **数据安全**：
+  - 敏感数据加密
+  - CSRF 防护
+  - XSS 防护
+  - 输入验证
+
+@rule("testing")
+### 测试规范
+
+- **单元测试**：
+  - 测试组件渲染
+  - 测试用户交互
+  - 测试错误处理
+
+- **集成测试**：
+  - 测试页面流程
+  - 测试 API 集成
+  - 测试路由跳转

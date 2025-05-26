@@ -6,11 +6,12 @@ export default withAuth(
     const token = req.nextauth.token
     const path = req.nextUrl.pathname
 
-    // 管理员路由保护
-    if (path.startsWith("/admin") && token?.role?.name !== "SuperAdmin" && token?.role?.name !== "Admin") {
-      return NextResponse.redirect(new URL("/auth/unauthorized", req.url))
+    // 如果访问 admin 路由但没有登录，重定向到登录页
+    if (path.startsWith("/admin") && !token) {
+      return NextResponse.redirect(new URL("/auth/login", req.url))
     }
 
+    // 已登录用户可以访问所有 admin 路由
     return NextResponse.next()
   },
   {

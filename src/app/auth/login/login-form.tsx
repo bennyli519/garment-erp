@@ -13,7 +13,8 @@ interface LoginFormValues {
 }
 
 const defaultValues = {
-  email: 'admin@example.com',
+  // email: 'admin@example.com',
+  email:"admin@system.com",
   password: 'admin123'
 }
 
@@ -118,13 +119,13 @@ export function LoginForm() {
           登录
         </Button>
       </Form.Item>
-
+{/* 
       <Form.Item style={{ marginBottom: 0, textAlign: "center" }}>
         <Space>
           <Link href="/auth/forgot-password">忘记密码？</Link>
           <Link href="/auth/register">注册账户</Link>
         </Space>
-      </Form.Item>
+      </Form.Item> */}
     </Form>
   )
 } 

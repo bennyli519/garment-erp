@@ -10,6 +10,31 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Multi-tenant System Models
+model Tenant {
+  id          String       @id @default(uuid())
+  name        String      // 租户名称
+  code        String      @unique  // 租户编码
+  status      String      // active, inactive
+  schemaName  String      @unique  // 租户schema
+  type        String      @default("company") // 租户类型，默认为公司
+  // Company specific fields
+  address     String?    // 公司地址
+  contact     String?    // 联系人
+  phone       String?    // 联系电话
+  
+  // Tenant resources
+  departments Department[]
+  employees   Employee[]
+  users       User[]
+  modules     Module[]     // 租户特有的功能模块
+  permissions Permission[] // 租户特有的权限
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@map("tenants")
+}
+
 // User Management
 model User {
   id            String    @id @default(uuid())
@@ -18,8 +43,8 @@ model User {
   name          String
   role          Role      @relation(fields: [roleId], references: [id])
   roleId        String
-  company       Company   @relation(fields: [companyId], references: [id])
-  companyId     String
+  tenant        Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId      String
   department    Department? @relation(fields: [departmentId], references: [id])
   departmentId  String?
   emailVerified DateTime?
@@ -28,6 +53,9 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   isActive      Boolean   @default(true)
+  auditLogs     AuditLog[]
+
+  @@map("users")
 }
 
 model Role {
@@ -40,6 +68,8 @@ model Role {
   users       User[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
+
+  @@map("roles")
 }
 
 // 功能模块表
@@ -52,13 +82,14 @@ model Module {
   sort        Int         @default(0)
   status      String      @default("active") // active, inactive
   isSystem    Boolean     @default(false)   // 是否是系统模块
-  company     Company?    @relation(fields: [companyId], references: [id])
-  companyId   String?     // 为空表示所有公司可用
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id])
+  tenantId    String?     // 为空表示所有租户可用
   permissions Permission[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
-  @@unique([code, companyId])  // 同一公司下模块代码唯一
+  @@unique([code, tenantId])  // 同一租户下模块代码唯一
+  @@map("modules")
 }
 
 // 权限表
@@ -70,13 +101,14 @@ model Permission {
   module      Module   @relation(fields: [moduleId], references: [id])
   moduleId    String   // 所属模块ID
   isSystem    Boolean  @default(false)   // 是否是系统权限
-  company     Company? @relation(fields: [companyId], references: [id])
-  companyId   String?  // 为空表示所有公司可用
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  tenantId    String?  // 为空表示所有租户可用
   roles       RolePermission[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@unique([code, companyId])  // 同一公司下权限代码唯一
+  @@unique([code, tenantId])  // 同一租户下权限代码唯一
+  @@map("permissions")
 }
 
 // 角色-权限关联表
@@ -89,27 +121,10 @@ model RolePermission {
   createdAt     DateTime   @default(now())
 
   @@unique([roleId, permissionId])
+  @@map("role_permissions")
 }
 
 // Organization Structure
-model Company {
-  id          String       @id @default(uuid())
-  name        String
-  code        String       @unique
-  status      String      // active, inactive
-  schemaName  String       @unique
-  address     String?
-  contact     String?
-  phone       String?
-  departments Department[]
-  employees   Employee[]
-  users       User[]
-  modules     Module[]     // 公司特有的功能模块
-  permissions Permission[] // 公司特有的权限
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-}
-
 model Department {
   id        String    @id @default(uuid())
   name      String
@@ -118,22 +133,24 @@ model Department {
   path      String
   level     Int
   status    String    // active, inactive
-  company   Company   @relation(fields: [companyId], references: [id])
-  companyId String
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  tenantId  String
   parent    Department?  @relation("DepartmentToParent", fields: [parentId], references: [id])
   children  Department[] @relation("DepartmentToParent")
   employees Employee[]
   users     User[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  @@map("departments")
 }
 
 model Employee {
   id           String     @id @default(uuid())
   name         String
   code         String     @unique
-  company      Company    @relation(fields: [companyId], references: [id])
-  companyId    String
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  tenantId     String
   department   Department @relation(fields: [departmentId], references: [id])
   departmentId String
   position     String?
@@ -146,6 +163,8 @@ model Employee {
   resignDate   DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+
+  @@map("employees")
 }
 
 // Business Models
@@ -166,6 +185,8 @@ model Process {
   products        Product[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+
+  @@map("processes")
 }
 
 model Product {
@@ -181,9 +202,10 @@ model Product {
   productionOrders ProductionOrder[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+
+  @@map("products")
 }
 
-// 产品变体（具体的颜色和尺码组合）
 model ProductVariant {
   id          String   @id @default(uuid())
   product     Product  @relation(fields: [productId], references: [id])
@@ -199,6 +221,7 @@ model ProductVariant {
   updatedAt   DateTime @updatedAt
 
   @@unique([productId, colorId, sizeId])
+  @@map("product_variants")
 }
 
 model Color {
@@ -211,6 +234,8 @@ model Color {
   variants    ProductVariant[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  @@map("colors")
 }
 
 model Size {
@@ -223,6 +248,8 @@ model Size {
   variants    ProductVariant[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+
+  @@map("sizes")
 }
 
 model Brand {
@@ -235,6 +262,8 @@ model Brand {
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@map("brands")
 }
 
 model ProductionOrder {
@@ -250,6 +279,8 @@ model ProductionOrder {
   createdBy   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("production_orders")
 }
 
 model AuditLog {
@@ -260,4 +291,8 @@ model AuditLog {
   resourceId  String
   details     Json
   createdAt   DateTime @default(now())
+  
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 } 

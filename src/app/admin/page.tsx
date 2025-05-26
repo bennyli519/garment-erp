@@ -1,33 +1,33 @@
-import { ArrowUpRight, Users, Package, DollarSign } from 'lucide-react'
+'use client'
 
-const stats = [
-  {
-    label: 'Total Users',
-    value: '2,420',
-    change: '+12%',
-    icon: Users,
-  },
-  {
-    label: 'Total Products',
-    value: '1,210',
-    change: '+18%',
-    icon: Package,
-  },
-  {
-    label: 'Total Revenue',
-    value: '$45,200',
-    change: '+8%',
-    icon: DollarSign,
-  },
-]
+import AdminLayout from '@/app/admin/components/layout/admin-layout'
+import { useSession } from 'next-auth/react'
+import { Card, Typography } from 'antd'
 
-export default function AdminPage() {
+const { Title, Paragraph } = Typography
+
+export default function AdminDashboard() {
+  const { data: session } = useSession()
+
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-semibold">欢迎使用服装 ERP 系统</h1>
-      <p className="mt-2 text-gray-600">
-        选择左侧菜单开始使用系统功能
-      </p>
-    </div>
+
+      <div className="min-h-[calc(100vh-64px)]">
+        <Card>
+          <Title level={2}>欢迎来到管理后台</Title>
+          <Paragraph>
+            您好，{session?.user?.name || session?.user?.email}！
+          </Paragraph>
+          <Paragraph>
+            当前用户信息：
+            <ul>
+              <li>邮箱：{session?.user?.email}</li>
+              <li>角色ID：{session?.user?.roleId}</li>
+              <li>租户ID：{session?.user?.tenantId}</li>
+              <li>部门ID：{session?.user?.departmentId}</li>
+            </ul>
+          </Paragraph>
+        </Card>
+      </div>
+
   )
 } 

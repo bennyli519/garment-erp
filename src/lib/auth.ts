@@ -45,7 +45,7 @@ export const authOptions: NextAuthOptions = {
             },
             include: {
               role: true,
-              company: true,
+              tenant: true,
               department: true
             }
           })
@@ -68,9 +68,9 @@ export const authOptions: NextAuthOptions = {
             id: user.id,
             email: user.email,
             name: user.name,
-            role: user.role,
-            company: user.company,
-            department: user.department
+            roleId: user.roleId,
+            tenantId: user.tenantId,
+            departmentId: user.departmentId
           }
         } catch (error) {
           console.error('Auth error:', error)
@@ -85,9 +85,9 @@ export const authOptions: NextAuthOptions = {
         return {
           ...token,
           id: user.id,
-          role: user.role,
-          company: user.company,
-          department: user.department
+          roleId: user.roleId,
+          tenantId: user.tenantId,
+          departmentId: user.departmentId
         }
       }
       return token
@@ -98,9 +98,9 @@ export const authOptions: NextAuthOptions = {
         user: {
           ...session.user,
           id: token.id,
-          role: token.role,
-          company: token.company,
-          department: token.department
+          roleId: token.roleId,
+          tenantId: token.tenantId,
+          departmentId: token.departmentId
         }
       }
     }

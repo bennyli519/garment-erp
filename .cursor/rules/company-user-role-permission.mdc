@@ -1,0 +1,171 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+@group("System Design")
+@title("Company, User, Role and Permission Relationships")
+@description("Guidelines for managing company, user, role and permission relationships in the system")
+@version("1.0.0")
+@author("Benny")
+@tags(["architecture", "security", "authorization"])
+
+# Company, User, Role and Permission Relationships
+
+## Core Entities
+
+### Company
+- Independent entity representing a tenant in the system
+- Has unique code and schema name
+- Can have company-specific modules and permissions
+- Status: active/inactive
+
+### User
+- Must belong to a Company (companyId)
+- Must have a Role (roleId)
+- Can optionally belong to a Department (departmentId)
+- Status: active/inactive
+- Email verification and authentication
+
+### Role
+- Can have multiple Users (one-to-many)
+- Connected to Permissions through RolePermission (many-to-many)
+- Can be system-defined (isSystem = true) or company-specific
+- Example: ADMIN, USER, MANAGER
+
+### Permission
+- Must belong to a Module (moduleId)
+- Can be system-wide (companyId = null) or company-specific
+- Connected to Roles through RolePermission
+- Types: page, action
+- Example: manage_users, manage_roles
+
+### Module
+- Represents a functional module in the system
+- Can be system-wide (companyId = null) or company-specific
+- Contains multiple Permissions
+- Example: system, user_management, production
+
+## Relationships
+
+### System Level
+```
+Module (system) -> Permission (system) -> RolePermission -> Role (ADMIN) -> User
+```
+
+1. System Modules:
+   - No company association (companyId = null)
+   - Fixed ID for core modules (e.g., 'system')
+   - isSystem = true
+
+2. System Permissions:
+   - No company association (companyId = null)
+   - Fixed ID for core permissions
+   - isSystem = true
+   - Must belong to a system module
+
+3. System Roles:
+   - Available across all companies
+   - isSystem = true
+   - Example: ADMIN role
+
+### Company Level
+```
+Company -> User -> Role -> RolePermission -> Permission -> Module
+```
+
+1. Company Specific:
+   - Company has its own modules and permissions
+   - Users must belong to a company
+   - Company-specific roles and permissions
+
+2. Role Assignment:
+   - User directly references Role (roleId)
+   - No separate UserRole table needed
+   - One user can have only one role
+
+3. Permission Assignment:
+   - RolePermission links Role and Permission
+   - Permissions can be system or company-specific
+   - Always belongs to a Module
+
+## Implementation Rules
+
+### 1. Registration Flow
+```typescript
+// Create company and system entities in transaction
+await prisma.$transaction(async (tx) => {
+  // 1. Create company
+  const company = await tx.company.create({ ... });
+
+  // 2. Get or create system admin role
+  const adminRole = await tx.role.upsert({ 
+    where: { code: 'ADMIN' },
+    create: { isSystem: true, ... }
+  });
+
+  // 3. Create user with admin role
+  const user = await tx.user.create({
+    data: {
+      companyId: company.id,
+      roleId: adminRole.id,
+      ...
+    }
+  });
+
+  // 4. Setup system permissions
+  const systemModule = await tx.module.upsert({
+    where: { id: 'system' },
+    create: { isSystem: true, ... }
+  });
+
+  // 5. Assign permissions to role
+  await tx.rolePermission.create({ ... });
+});
+```
+
+### 2. Permission Check Flow
+```typescript
+// Check if user has permission
+const hasPermission = await prisma.permission.findFirst({
+  where: {
+    code: permissionCode,
+    OR: [
+      { companyId: null },        // System permission
+      { companyId: user.companyId } // Company permission
+    ],
+    roles: {
+      some: {
+        roleId: user.roleId
+      }
+    }
+  }
+});
+```
+
+## Best Practices
+
+1. System Entities:
+   - Use fixed IDs for system modules and permissions
+   - Mark system entities with isSystem = true
+   - Keep system permissions company-independent
+
+2. Company Isolation:
+   - Always associate users with companies
+   - Scope permissions by company when needed
+   - Use transactions for related operations
+
+3. Role Management:
+   - Keep roles simple and hierarchical
+   - Use single role per user design
+   - Separate system and company roles
+
+4. Permission Design:
+   - Group permissions by modules
+   - Use clear and consistent naming
+   - Consider permission types (page/action)
+
+5. Security:
+   - Always check company context
+   - Validate role assignments
+   - Maintain permission audit logs
