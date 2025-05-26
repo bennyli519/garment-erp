@@ -1,4 +1,4 @@
-import { TenantService } from '@/backend/core/services/tenant.service'
+import { TenantService } from '@/backend/services/tenant.service'
 import { NextRequest, NextResponse } from 'next/server'
 
 export class TenantController {

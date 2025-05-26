@@ -1,4 +1,4 @@
-import { TenantController } from '@/backend/api/controllers/admin/tenant/tenant.controller'
+import { TenantController } from '@/backend/controllers/admin/tenant/tenant.controller'
 
 export const tenantRoutes = {
   GET: TenantController.list,
