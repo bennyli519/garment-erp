@@ -1,0 +1,190 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+@group("System Design")
+@title("Tenant, User, Role and Permission Relationships")
+@description("Guidelines for managing tenant, user, role and permission relationships in the system")
+@version("1.0.0")
+@author("Benny")
+@tags(["architecture", "security", "authorization", "multi-tenant"])
+
+# Tenant, User, Role and Permission Relationships
+
+## Core Entities
+
+### Tenant
+- Independent entity representing a tenant in the system
+- Has unique code and schema name
+- Can have tenant-specific modules and permissions
+- Status: active/inactive
+- Type: system, company (default), or other future types
+- Business fields: address, contact, phone (for company type)
+
+### User
+- Must belong to a Tenant (tenantId)
+- Must have a Role (roleId)
+- Can optionally belong to a Department (departmentId)
+- Status: active/inactive
+- Email verification and authentication
+
+### Role
+- Can have multiple Users (one-to-many)
+- Connected to Permissions through RolePermission (many-to-many)
+- Can be system-defined (isSystem = true) or tenant-specific
+- Example: ADMIN, USER, MANAGER
+
+### Permission
+- Must belong to a Module (moduleId)
+- Can be system-wide (tenantId = null) or tenant-specific
+- Connected to Roles through RolePermission
+- Types: page, action
+- Example: manage_users, manage_roles
+
+### Module
+- Represents a functional module in the system
+- Can be system-wide (tenantId = null) or tenant-specific
+- Contains multiple Permissions
+- Example: system, user_management, production
+
+## Relationships
+
+### System Level
+```
+Module (system) -> Permission (system) -> RolePermission -> Role (ADMIN) -> User
+```
+
+1. System Modules:
+   - No tenant association (tenantId = null)
+   - Fixed ID for core modules (e.g., 'system')
+   - isSystem = true
+
+2. System Permissions:
+   - No tenant association (tenantId = null)
+   - Fixed ID for core permissions
+   - isSystem = true
+   - Must belong to a system module
+
+3. System Roles:
+   - Available across all tenants
+   - isSystem = true
+   - Example: ADMIN role
+
+### Tenant Level
+```
+Tenant -> User -> Role -> RolePermission -> Permission -> Module
+```
+
+1. Tenant Specific:
+   - Tenant has its own modules and permissions
+   - Users must belong to a tenant
+   - Tenant-specific roles and permissions
+
+2. Role Assignment:
+   - User directly references Role (roleId)
+   - No separate UserRole table needed
+   - One user can have only one role
+
+3. Permission Assignment:
+   - RolePermission links Role and Permission
+   - Permissions can be system or tenant-specific
+   - Always belongs to a Module
+
+## Implementation Rules
+
+### 1. Registration Flow
+```typescript
+// Create tenant and system entities in transaction
+await prisma.$transaction(async (tx) => {
+  // 1. Create tenant
+  const tenant = await tx.tenant.create({
+    data: {
+      name: 'Example Corp',
+      code: 'EXAMPLE',
+      type: 'company',
+      status: 'active',
+      schemaName: 'example_corp',
+    }
+  });
+
+  // 2. Get or create system admin role
+  const adminRole = await tx.role.upsert({ 
+    where: { code: 'ADMIN' },
+    create: { isSystem: true, ... }
+  });
+
+  // 3. Create user with admin role
+  const user = await tx.user.create({
+    data: {
+      tenantId: tenant.id,
+      roleId: adminRole.id,
+      ...
+    }
+  });
+
+  // 4. Setup system permissions
+  const systemModule = await tx.module.upsert({
+    where: { id: 'system' },
+    create: { isSystem: true, ... }
+  });
+
+  // 5. Assign permissions to role
+  await tx.rolePermission.create({ ... });
+});
+```
+
+### 2. Permission Check Flow
+```typescript
+// Check if user has permission
+const hasPermission = await prisma.permission.findFirst({
+  where: {
+    code: permissionCode,
+    OR: [
+      { tenantId: null },        // System permission
+      { tenantId: user.tenantId } // Tenant permission
+    ],
+    roles: {
+      some: {
+        roleId: user.roleId
+      }
+    }
+  }
+});
+```
+
+## Best Practices
+
+1. System Entities:
+   - Use fixed IDs for system modules and permissions
+   - Mark system entities with isSystem = true
+   - Keep system permissions tenant-independent
+
+2. Tenant Isolation:
+   - Always associate users with tenants
+   - Scope permissions by tenant when needed
+   - Use transactions for related operations
+   - Consider tenant type when handling business logic
+
+3. Role Management:
+   - Keep roles simple and hierarchical
+   - Use single role per user design
+   - Separate system and tenant roles
+
+4. Permission Design:
+   - Group permissions by modules
+   - Use clear and consistent naming
+   - Consider permission types (page/action)
+   - Handle tenant-specific permission overrides
+
+5. Security:
+   - Always check tenant context
+   - Validate role assignments
+   - Maintain permission audit logs
+   - Ensure proper tenant isolation
+
+6. Multi-tenancy Considerations:
+   - Use schema-based isolation (schemaName)
+   - Handle tenant-specific configurations
+   - Consider tenant type in business logic
+   - Implement proper tenant lifecycle management

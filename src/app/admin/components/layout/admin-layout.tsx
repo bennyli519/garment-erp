@@ -32,6 +32,8 @@ import {
 import { useRouter, usePathname } from 'next/navigation'
 import type { MenuProps } from 'antd'
 import { signOut, useSession } from 'next-auth/react'
+import { usePermissions } from '../../hooks/usePermissions'
+
 
 const { Header, Sider, Content } = Layout
 const { TabPane } = Tabs
@@ -57,6 +59,18 @@ const menuItems: MenuItem[] = [
     icon: <SettingOutlined />,
     label: '系统管理',
     children: [
+      {
+        key: 'tenant-management',
+        icon: <BankOutlined />,
+        label: '租户管理',
+        path: '/admin/pages/tenants',
+      },
+      {
+        key: 'user-management',
+        icon: <UserOutlined />,
+        label: '用户管理',
+        path: '/admin/pages/users',
+      },
       {
         key: 'employee-info',
         icon: <TeamOutlined />,
@@ -172,6 +186,7 @@ export default function AdminLayout({
   const router = useRouter()
   const pathname = usePathname()
   const { data: session } = useSession()
+  const { hasPermission, isAdmin } = usePermissions()
   const [activeTab, setActiveTab] = useState('')
   const [tabs, setTabs] = useState<Tab[]>([])
   const [collapsed, setCollapsed] = useState(false)
@@ -181,10 +196,68 @@ export default function AdminLayout({
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken()
 
+  // 根据权限过滤菜单项
+  const filterMenuByPermissions = (items: MenuItem[]): MenuItem[] => {
+    return items.filter(item => {
+      // 如果是管理员，显示所有菜单
+      if (isAdmin) return true
+      
+      // 根据菜单项的 key 检查权限
+      if (item.key === 'system-management') {
+        return hasPermission('system:tenant:view') ||
+               hasPermission('system:user:view') ||
+               hasPermission('system:employee:view') || 
+               hasPermission('system:permission:view') || 
+               hasPermission('system:role:view')
+      }
+      
+      if (item.key === 'production-management') {
+        return hasPermission('production:order:view') || 
+               hasPermission('production:process:view')
+      }
+      
+      // 对于子菜单项
+      if (item.key === 'tenant-management') {
+        return hasPermission('system:tenant:view')
+      }
+      
+      if (item.key === 'user-management') {
+        return hasPermission('system:user:view')
+      }
+      
+      if (item.key === 'employee-info') {
+        return hasPermission('system:employee:view')
+      }
+      
+      if (item.key === 'permission-management') {
+        return hasPermission('system:permission:view')
+      }
+      
+      if (item.key === 'role-management') {
+        return hasPermission('system:role:view')
+      }
+      
+      if (item.key === 'production-order') {
+        return hasPermission('production:order:view')
+      }
+      
+      if (item.key === 'production-process') {
+        return hasPermission('production:process:view')
+      }
+      
+      return true
+    }).map(item => ({
+      ...item,
+      children: item.children ? filterMenuByPermissions(item.children) : undefined
+    }))
+  }
+
+  const filteredMenuItems = filterMenuByPermissions(menuItems)
+
   // 根据当前路径设置活动标签
   useEffect(() => {
     // 递归查找当前路径对应的菜单项
-    const currentMenuItem = findMenuItem(menuItems, pathname)
+    const currentMenuItem = findMenuItem(filteredMenuItems, pathname)
     if (currentMenuItem && !tabs.find(tab => tab.key === currentMenuItem.key)) {
       setTabs(prev => [...prev, {
         key: currentMenuItem.key,
@@ -199,7 +272,7 @@ export default function AdminLayout({
 
   // 更新面包屑
   useEffect(() => {
-    const path = findBreadcrumbPath(menuItems, pathname)
+    const path = findBreadcrumbPath(filteredMenuItems, pathname)
     setBreadcrumbs(path)
   }, [pathname])
 
@@ -267,7 +340,7 @@ export default function AdminLayout({
           theme="light"
           mode="inline"
           selectedKeys={[activeTab]}
-          items={convertMenuItems(menuItems, router, tabs, setTabs, setActiveTab)}
+          items={convertMenuItems(filteredMenuItems, router, tabs, setTabs, setActiveTab)}
         />
       </Sider>
       <Layout>
