@@ -57,9 +57,10 @@ export const authOptions: NextAuthOptions = {
           if (!user.isActive) {
             throw new Error("用户已被禁用")
           }
-
-          const isValid = await bcrypt.compare(credentials.password, user.password)
-
+console.log('credentials.password',credentials.password)
+console.log('user.password',user.password)
+          const isValid = await bcrypt.compare(credentials.password.trim(), user.password)
+          console.log('isValid',isValid)
           if (!isValid) {
             throw new Error("密码错误")
           }

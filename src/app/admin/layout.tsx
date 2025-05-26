@@ -3,6 +3,7 @@
 import { ConfigProvider, theme } from 'antd'
 import zhCN from 'antd/locale/zh_CN'
 import AdminLayout from './components/layout/admin-layout'
+import { Providers } from './providers'
 
 export default function RootLayout({
   children,
@@ -14,9 +15,14 @@ export default function RootLayout({
       locale={zhCN}
       theme={{
         algorithm: theme.defaultAlgorithm,
+        token: {
+          colorPrimary: '#1677ff',
+        },
       }}
     >
-      <AdminLayout>{children}</AdminLayout>
+      <Providers>
+        <AdminLayout>{children}</AdminLayout>
+      </Providers>
     </ConfigProvider>
   )
 } 

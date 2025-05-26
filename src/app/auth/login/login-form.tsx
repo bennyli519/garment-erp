@@ -13,9 +13,9 @@ interface LoginFormValues {
 }
 
 const defaultValues = {
-  // email: 'admin@example.com',
-  email:"admin@system.com",
-  password: 'admin123'
+  email: 'admin@example.com',
+  // email:"admin@system.com",
+  password: 'admin'
 }
 
 export function LoginForm() {
@@ -104,7 +104,7 @@ export function LoginForm() {
         name="password"
         rules={[
           { required: true, message: "请输入密码" },
-          { min: 6, message: "密码至少需要6个字符" },
+          { min: 3, message: "密码至少需要63个字符" },
         ]}
       >
         <Input.Password

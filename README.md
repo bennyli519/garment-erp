@@ -1,120 +1,149 @@
 # Garment ERP System
 
-基于 Next.js 14 构建的现代化服装企业资源管理系统。
+This is the monorepo for the Garment ERP System, a modern solution for managing garment production processes.
 
-## 技术栈
+## Overview
 
-- **Frontend**:
-  - Next.js 15.3.2 (App Router)
-  - React 18
-  - TypeScript
-  - Ant Design 5.x
-  - Zustand (状态管理)
-  - React Query (数据获取)
-  - React Hook Form (表单管理)
-  - Zod (数据验证)
+The project is built with Next.js (App Router) for both the frontend and backend API, Prisma as the ORM, and TypeScript for type safety.
 
-- **Backend**:
-  - Next.js API Routes
-  - Prisma ORM
-  - PostgreSQL
-  - NextAuth.js (认证)
-
-## 项目结构
+## Folder Structure
 
 ```
-src/
-├── app/                    # Next.js App Router
-│   ├── (portal)/          # 公共门户
-│   ├── admin/             # 管理后台
-│   │   ├── components/    # 管理后台组件
-│   │   ├── hooks/        # 自定义 Hooks
-│   │   └── stores/       # 状态管理
-│   └── api/              # API 路由
-├── backend/               # 后端核心逻辑
-│   ├── core/             # 业务逻辑
-│   ├── domain/           # 领域模型
-│   └── infrastructure/   # 基础设施
-└── shared/               # 共享工具和类型
+garment-erp/
+├── .next/                  # Next.js build output
+├── .git/                   # Git repository files
+├── docs/                   # Project documentation (guidelines, design docs)
+├── docker/                 # Docker configurations (e.g., docker-compose.yml)
+├── node_modules/           # Project dependencies
+├── prisma/                 # Prisma schema, migrations, and seeds
+│   ├── migrations/         # Database migration files
+│   └── schema.prisma       # Main Prisma schema file
+├── public/                 # Static assets served by Next.js
+├── src/                    # Application source code
+│   ├── app/                # Next.js App Router (Frontend Pages & API Routes)
+│   │   ├── api/            # API route handlers
+│   │   │   ├── tenants/
+│   │   │   │   ├── [id]/route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── users/
+│   │   │   │   ├── [id]/route.ts
+│   │   │   │   └── route.ts
+│   │   │   └── # (other API routes ...)
+│   │   ├── admin/          # Admin portal frontend (example structure)
+│   │   │   ├── components/
+│   │   │   ├── pages/
+│   │   │   └── layout.tsx
+│   │   ├── (portal)/       # Main application portal (example structure)
+│   │   ├── layout.tsx      # Root layout
+│   │   └── page.tsx        # Root page
+│   │   └── # (other frontend pages, components, hooks, styles, lib ...)
+│   │
+│   └── backend/            # Backend business logic and data access
+│       ├── controllers/    # Request handlers, call services
+│       │   ├── tenant.controller.ts
+│       │   └── user.controller.ts
+│       ├── services/       # Core business logic
+│       │   ├── tenant.service.ts
+│       │   └── user.service.ts
+│       ├── repositories/   # Data access layer (using Prisma)
+│       │   ├── tenant.repository.ts
+│       │   └── user.repository.ts
+│       ├── types/          # TypeScript definitions and DTOs
+│       │   ├── tenant.types.ts
+│       │   └── user.types.ts
+│       └── utils/          # Shared backend utilities
+│
+├── .gitignore              # Files and directories to be ignored by Git
+├── docker-compose.yml      # Docker Compose configuration
+├── eslint.config.mjs       # ESLint configuration
+├── next-env.d.ts           # Next.js TypeScript environment types
+├── next.config.mjs         # Next.js configuration
+├── package.json            # Project metadata and dependencies
+├── pnpm-lock.yaml          # PNPM lock file
+├── README.md               # This file
+└── tsconfig.json           # TypeScript compiler configuration
 ```
 
-## 开始使用
+## Key Technologies
 
-1. **安装依赖**
+*   **Framework**: Next.js (App Router)
+*   **Language**: TypeScript
+*   **ORM**: Prisma
+*   **Database**: PostgreSQL (or as configured in `docker-compose.yml` and `schema.prisma`)
+*   **Styling**: (Specify your styling solution, e.g., Tailwind CSS, CSS Modules)
+*   **Package Manager**: pnpm
+*   **Containerization**: Docker
 
-```bash
-pnpm install
-```
+## Getting Started
 
-2. **环境配置**
+### Prerequisites
 
-创建 `.env` 文件并配置以下环境变量：
+*   Node.js (latest LTS version recommended)
+*   pnpm (https://pnpm.io/installation)
+*   Docker and Docker Compose (https://www.docker.com/get-started)
 
-```env
-DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="your-secret"
-NEXTAUTH_URL="http://localhost:3000"
-```
+### Installation
 
-3. **数据库迁移**
+1.  Clone the repository:
+    ```bash
+    git clone <repository-url>
+    cd garment-erp
+    ```
+2.  Install dependencies:
+    ```bash
+    pnpm install
+    ```
 
-```bash
-pnpm prisma migrate dev
-```
+### Environment Setup
 
-4. **启动开发服务器**
+1.  Create a `.env` file in the root of the project by copying `.env.example` (if it exists) or by creating a new one.
+2.  Set the `DATABASE_URL` environment variable. For local development with Docker, it will typically look like this if you're using PostgreSQL:
+    ```env
+    DATABASE_URL="postgresql://user:password@localhost:5432/garment_erp_db?schema=public"
+    ```
+    (Adjust username, password, port, and database name as per your `docker-compose.yml` and Prisma setup).
 
-```bash
-pnpm dev
-```
+### Database Setup
 
-访问 [http://localhost:3000](http://localhost:3000) 查看应用。
+1.  Start the database container using Docker Compose:
+    ```bash
+    docker-compose up -d postgres  # Assuming 'postgres' is your service name in docker-compose.yml
+    ```
+2.  Run Prisma migrations to create the database schema:
+    ```bash
+    pnpm prisma migrate dev
+    ```
+3.  (Optional) Seed the database if you have seed scripts:
+    ```bash
+    pnpm prisma db seed
+    ```
 
-## 主要功能
+### Running the Application
 
-- **多级菜单管理**
-  - 动态路由和权限控制
-  - 面包屑导航
-  - 标签页管理
+1.  Start the development server:
+    ```bash
+    pnpm dev
+    ```
+    The application should now be running on `http://localhost:3000` (or your configured port).
 
-- **用户管理**
-  - 用户认证和授权
-  - 角色和权限管理
-  - 部门管理
+## Available Scripts
 
-- **系统管理**
-  - 基础数据维护
-  - 系统配置
-  - 日志管理
+In `package.json`, you can find various scripts:
 
-## 开发指南
+*   `pnpm dev`: Starts the Next.js development server.
+*   `pnpm build`: Builds the application for production.
+*   `pnpm start`: Starts a Next.js production server.
+*   `pnpm lint`: Lints the codebase using ESLint.
+*   `pnpm prisma:migrate:dev`: Runs database migrations for development.
+*   `pnpm prisma:studio`: Opens Prisma Studio to view and manage data.
+*   `pnpm prisma:generate`: Generates Prisma Client based on your schema.
 
-- 遵循 [Admin Frontend Guidelines](./.cursor/rules/admin-frontend.mdc) 进行开发
-- 使用 `pnpm lint` 进行代码检查
-- 使用 `pnpm build` 构建生产版本
+(Add or modify scripts as per your `package.json`)
 
-## 部署
+## Coding Guidelines
 
-1. **构建应用**
+Detailed coding guidelines, architectural rules, and design documents can be found in the `/docs` directory.
 
-```bash
-pnpm build
-```
+## Contributing
 
-2. **启动生产服务器**
-
-```bash
-pnpm start
-```
-
-## 贡献指南
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-## License
-
-[MIT](LICENSE)
+(Add guidelines for contributing to the project if applicable.) 

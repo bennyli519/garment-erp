@@ -29,6 +29,7 @@ model Tenant {
   users       User[]
   modules     Module[]     // 租户特有的功能模块
   permissions Permission[] // 租户特有的权限
+  roles       Role[]      // 租户特有的角色
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -60,15 +61,18 @@ model User {
 
 model Role {
   id          String       @id @default(uuid())
-  name        String       @unique
-  code        String       @unique
+  name        String
+  code        String
   description String?
   isSystem    Boolean     @default(false)  // 是否是系统预定义角色
+  tenant      Tenant?     @relation(fields: [tenantId], references: [id])
+  tenantId    String?     // 为空表示系统角色
   permissions RolePermission[]  // 改为中间表关联
   users       User[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
+  @@unique([code, tenantId])  // 同一租户下角色代码唯一
   @@map("roles")
 }
 
@@ -98,6 +102,7 @@ model Permission {
   name        String   // 权限名称，如：查看用户列表
   code        String   // 权限代码，如：view_user_list
   type        String   // 权限类型：page, action
+  path        String?  // 页面路径，仅对 type=page 的权限有效
   module      Module   @relation(fields: [moduleId], references: [id])
   moduleId    String   // 所属模块ID
   isSystem    Boolean  @default(false)   // 是否是系统权限
